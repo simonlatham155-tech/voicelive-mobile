@@ -50,7 +50,7 @@ export function useAudioEffects() {
     // Create all effect nodes
     const preGain = audioContext.createGain();
     const compressor = audioContext.createDynamicsCompressor();
-    const autotune = new AutotuneEngine(audioContext);
+    const autotune = new AutotuneEngine(audioContext, source);
     const pitchShifter = audioContext.createBiquadFilter();
     const harmony = audioContext.createGain();
     const reverb = audioContext.createConvolver();
