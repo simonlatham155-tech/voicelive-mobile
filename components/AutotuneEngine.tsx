@@ -1,7 +1,5 @@
 // Autotune engine using granular synthesis for pitch correction
 export class AutotuneEngine {
-  private audioContext: AudioContext;
-  private inputNode: AudioNode;
   private outputNode: GainNode;
   private scriptProcessor: ScriptProcessorNode | null = null;
   private workletNode: AudioWorkletNode | null = null;
@@ -12,8 +10,6 @@ export class AutotuneEngine {
   private autotuneAmount: number = 0;
 
   constructor(audioContext: AudioContext, input: AudioNode) {
-    this.audioContext = audioContext;
-    this.inputNode = input;
     this.outputNode = audioContext.createGain();
     this.outputNode.gain.value = 1.0;
   }
