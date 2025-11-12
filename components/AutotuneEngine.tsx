@@ -9,7 +9,7 @@ export class AutotuneEngine {
   private targetKey: string = 'C';
   private autotuneAmount: number = 0;
 
-  constructor(audioContext: AudioContext, input: AudioNode) {
+  constructor(audioContext: AudioContext, _input: AudioNode) {
     this.outputNode = audioContext.createGain();
     this.outputNode.gain.value = 1.0;
   }
