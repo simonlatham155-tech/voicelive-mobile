@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { VoiceProcessor } from './components/VoiceProcessor';
 import { EffectControls } from './components/EffectControls';
 import { PresetSelector } from './components/PresetSelector';

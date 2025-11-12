@@ -10,9 +10,6 @@ export class AutotuneEngine {
   private detectedPitch: number | null = null;
   private targetKey: string = 'C';
   private autotuneAmount: number = 0;
-  
-  private grainSize: number = 0.05; // 50ms grains
-  private overlapFactor: number = 4;
 
   constructor(audioContext: AudioContext, input: AudioNode) {
     this.audioContext = audioContext;
