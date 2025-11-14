@@ -70,9 +70,14 @@ export default function App() {
             {!hasStarted && (
               <div className="mb-6 p-6 bg-gradient-to-br from-zinc-800 to-zinc-900 rounded-lg border-2 border-zinc-700 shadow-inner">
                 <p className="text-center mb-2 text-zinc-300">👋 Welcome!</p>
-                <p className="text-sm text-zinc-400 text-center">
+                <p className="text-sm text-zinc-400 text-center mb-3">
                   Tap the power button above to start and allow microphone access when prompted
                 </p>
+                <div className="p-3 bg-orange-500/10 border border-orange-500/30 rounded-lg">
+                  <p className="text-xs text-orange-400 text-center">
+                    ⚠️ <strong>IMPORTANT:</strong> You MUST wear headphones or use the iRig's headphone output to prevent feedback!
+                  </p>
+                </div>
               </div>
             )}
 

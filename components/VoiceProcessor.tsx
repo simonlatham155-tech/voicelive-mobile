@@ -81,16 +81,21 @@ export function VoiceProcessor({
     try {
       setError(null);
       
+      console.log('[VoiceProcessor] Starting audio processing...');
+      
       // Create audio context FIRST (iOS requirement)
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       audioContextRef.current = audioContext;
+      console.log('[VoiceProcessor] AudioContext created:', audioContext.state);
 
       // Resume audio context if suspended (required on iOS)
       if (audioContext.state === 'suspended') {
         await audioContext.resume();
+        console.log('[VoiceProcessor] AudioContext resumed');
       }
 
       // Request microphone access with more specific constraints for iOS
+      console.log('[VoiceProcessor] Requesting microphone access...');
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: false,
@@ -102,24 +107,35 @@ export function VoiceProcessor({
 
       streamRef.current = stream;
       setPermissionGranted(true);
+      console.log('[VoiceProcessor] Microphone access granted');
 
       // Create nodes
+      console.log('[VoiceProcessor] Creating audio nodes...');
       const source = audioContext.createMediaStreamSource(stream);
       const analyser = audioContext.createAnalyser();
       analyser.fftSize = 2048;
       analyser.smoothingTimeConstant = 0.8;
       analyserRef.current = analyser;
+      console.log('[VoiceProcessor] Audio nodes created');
 
       // Setup effects chain
+      console.log('[VoiceProcessor] Setting up effects chain...');
       const effectsOutput = setupEffects(audioContext, source, analyser);
+      console.log('[VoiceProcessor] Effects chain setup complete');
 
-      // Connect to destination
+      // Connect to destination - user MUST wear headphones to prevent feedback
+      // This is required for the vocal processor to work
       effectsOutput.connect(audioContext.destination);
+      
+      console.log('[VoiceProcessor] Connected to output - IMPORTANT: Use headphones to prevent feedback!');
 
       // Start level monitoring
+      console.log('[VoiceProcessor] Starting level monitoring...');
       monitorAudioLevel();
+      console.log('[VoiceProcessor] Audio processing started successfully!');
     } catch (err: any) {
-      console.error('Audio processing error:', err);
+      console.error('[VoiceProcessor] Audio processing error:', err);
+      console.error('[VoiceProcessor] Error stack:', err.stack);
       
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
         setError('Microphone access denied. Please go to Settings > Safari > Microphone and allow access, then refresh the page.');

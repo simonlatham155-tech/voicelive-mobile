@@ -45,127 +45,142 @@ export function useAudioEffects() {
     source: MediaStreamAudioSourceNode,
     analyser: AnalyserNode
   ): GainNode => {
-    audioContextRef.current = audioContext;
+    try {
+      console.log('[useAudioEffects] Starting effects setup...');
+      audioContextRef.current = audioContext;
 
-    // Create all effect nodes
-    const preGain = audioContext.createGain();
-    const compressor = audioContext.createDynamicsCompressor();
-    const autotune = new AutotuneEngine(audioContext, source);
-    const pitchShifter = audioContext.createBiquadFilter();
-    const harmony = audioContext.createGain();
-    const reverb = audioContext.createConvolver();
-    const reverbGain = audioContext.createGain();
-    const delay = audioContext.createDelay(5.0);
-    const delayFeedback = audioContext.createGain();
-    const delayGain = audioContext.createGain();
-    const postGain = audioContext.createGain();
+      // Create all effect nodes
+      console.log('[useAudioEffects] Creating effect nodes...');
+      const preGain = audioContext.createGain();
+      const compressor = audioContext.createDynamicsCompressor();
+      console.log('[useAudioEffects] Creating autotune engine...');
+      const autotune = new AutotuneEngine(audioContext, source);
+      const pitchShifter = audioContext.createBiquadFilter();
+      const harmony = audioContext.createGain();
+      const reverb = audioContext.createConvolver();
+      const reverbGain = audioContext.createGain();
+      const delay = audioContext.createDelay(5.0);
+      const delayFeedback = audioContext.createGain();
+      const delayGain = audioContext.createGain();
+      const postGain = audioContext.createGain();
 
-    // EQ (3-band)
-    const lowEQ = audioContext.createBiquadFilter();
-    const midEQ = audioContext.createBiquadFilter();
-    const highEQ = audioContext.createBiquadFilter();
-    
-    lowEQ.type = 'lowshelf';
-    lowEQ.frequency.value = 200;
-    midEQ.type = 'peaking';
-    midEQ.frequency.value = 1000;
-    midEQ.Q.value = 0.5;
-    highEQ.type = 'highshelf';
-    highEQ.frequency.value = 3000;
+      // EQ (3-band)
+      console.log('[useAudioEffects] Creating EQ nodes...');
+      const lowEQ = audioContext.createBiquadFilter();
+      const midEQ = audioContext.createBiquadFilter();
+      const highEQ = audioContext.createBiquadFilter();
+      
+      lowEQ.type = 'lowshelf';
+      lowEQ.frequency.value = 200;
+      midEQ.type = 'peaking';
+      midEQ.frequency.value = 1000;
+      midEQ.Q.value = 0.5;
+      highEQ.type = 'highshelf';
+      highEQ.frequency.value = 3000;
 
-    // Configure compressor
-    compressor.threshold.value = -24;
-    compressor.knee.value = 30;
-    compressor.ratio.value = 4;
-    compressor.attack.value = 0.003;
-    compressor.release.value = 0.25;
+      // Configure compressor
+      console.log('[useAudioEffects] Configuring compressor...');
+      compressor.threshold.value = -24;
+      compressor.knee.value = 30;
+      compressor.ratio.value = 4;
+      compressor.attack.value = 0.003;
+      compressor.release.value = 0.25;
 
-    // Setup reverb
-    reverb.buffer = createReverbImpulse(audioContext, 2, 2);
-    reverbGain.gain.value = 0;
+      // Setup reverb
+      console.log('[useAudioEffects] Setting up reverb...');
+      reverb.buffer = createReverbImpulse(audioContext, 2, 2);
+      reverbGain.gain.value = 0;
 
-    // Setup delay
-    delay.delayTime.value = 0.375; // ~150ms at 120 BPM
-    delayFeedback.gain.value = 0;
-    delayGain.gain.value = 0;
+      // Setup delay
+      console.log('[useAudioEffects] Setting up delay...');
+      delay.delayTime.value = 0.375; // ~150ms at 120 BPM
+      delayFeedback.gain.value = 0;
+      delayGain.gain.value = 0;
 
-    // Initial gains
-    preGain.gain.value = 1.5;
-    postGain.gain.value = 1.0;
-    harmony.gain.value = 0;
+      // Initial gains
+      preGain.gain.value = 1.5;
+      postGain.gain.value = 1.0;
+      harmony.gain.value = 0;
 
-    // Connect the chain
-    source.connect(analyser);
-    
-    // Main signal path
-    analyser.connect(preGain);
-    preGain.connect(compressor);
-    compressor.connect(lowEQ);
-    lowEQ.connect(midEQ);
-    midEQ.connect(highEQ);
-    
-    // Reverb send
-    highEQ.connect(reverb);
-    reverb.connect(reverbGain);
-    
-    // Delay send
-    highEQ.connect(delay);
-    delay.connect(delayFeedback);
-    delayFeedback.connect(delay); // Feedback loop
-    delay.connect(delayGain);
-    
-    // Mix to output
-    highEQ.connect(postGain);
-    reverbGain.connect(postGain);
-    delayGain.connect(postGain);
+      // Connect the chain
+      console.log('[useAudioEffects] Connecting audio chain...');
+      source.connect(analyser);
+      
+      // Main signal path
+      analyser.connect(preGain);
+      preGain.connect(compressor);
+      compressor.connect(lowEQ);
+      lowEQ.connect(midEQ);
+      midEQ.connect(highEQ);
+      
+      // Reverb send
+      highEQ.connect(reverb);
+      reverb.connect(reverbGain);
+      
+      // Delay send
+      highEQ.connect(delay);
+      delay.connect(delayFeedback);
+      delayFeedback.connect(delay); // Feedback loop
+      delay.connect(delayGain);
+      
+      // Mix to output
+      highEQ.connect(postGain);
+      reverbGain.connect(postGain);
+      delayGain.connect(postGain);
 
-    // Chorus setup
-    const chorus = audioContext.createDelay(0.05);
-    const chorusLFO = audioContext.createOscillator();
-    const chorusDepth = audioContext.createGain();
-    const chorusWet = audioContext.createGain();
-    const chorusDry = audioContext.createGain();
+      // Chorus setup
+      console.log('[useAudioEffects] Setting up chorus...');
+      const chorus = audioContext.createDelay(0.05);
+      const chorusLFO = audioContext.createOscillator();
+      const chorusDepth = audioContext.createGain();
+      const chorusWet = audioContext.createGain();
+      const chorusDry = audioContext.createGain();
 
-    chorus.delayTime.value = 0.025; // Base delay time (25ms)
-    chorusLFO.type = 'sine';
-    chorusLFO.frequency.value = 1.5; // LFO frequency
-    chorusDepth.gain.value = 0.005; // Depth of the chorus effect
-    chorusWet.gain.value = 0; // Start with chorus off
-    chorusDry.gain.value = 1.0; // Full dry signal
+      chorus.delayTime.value = 0.025; // Base delay time (25ms)
+      chorusLFO.type = 'sine';
+      chorusLFO.frequency.value = 1.5; // LFO frequency
+      chorusDepth.gain.value = 0.005; // Depth of the chorus effect
+      chorusWet.gain.value = 0; // Start with chorus off
+      chorusDry.gain.value = 1.0; // Full dry signal
 
-    // Connect chorus LFO to modulate delay time
-    chorusLFO.connect(chorusDepth);
-    chorusDepth.connect(chorus.delayTime);
-    chorusLFO.start();
+      // Connect chorus LFO to modulate delay time
+      chorusLFO.connect(chorusDepth);
+      chorusDepth.connect(chorus.delayTime);
+      chorusLFO.start();
 
-    // Connect audio through chorus
-    highEQ.connect(chorus);
-    chorus.connect(chorusWet);
-    highEQ.connect(chorusDry);
-    chorusWet.connect(postGain);
-    chorusDry.connect(postGain);
+      // Connect audio through chorus
+      highEQ.connect(chorus);
+      chorus.connect(chorusWet);
+      highEQ.connect(chorusDry);
+      chorusWet.connect(postGain);
+      chorusDry.connect(postGain);
 
-    nodesRef.current = {
-      preGain,
-      compressor,
-      autotune,
-      pitchShifter,
-      harmony,
-      reverb,
-      reverbGain,
-      delay,
-      delayFeedback,
-      delayGain,
-      eq: [lowEQ, midEQ, highEQ],
-      postGain,
-      chorus,
-      chorusLFO,
-      chorusDepth,
-      chorusWet,
-      chorusDry,
-    };
+      nodesRef.current = {
+        preGain,
+        compressor,
+        autotune,
+        pitchShifter,
+        harmony,
+        reverb,
+        reverbGain,
+        delay,
+        delayFeedback,
+        delayGain,
+        eq: [lowEQ, midEQ, highEQ],
+        postGain,
+        chorus,
+        chorusLFO,
+        chorusDepth,
+        chorusWet,
+        chorusDry,
+      };
 
-    return postGain;
+      console.log('[useAudioEffects] Effects setup complete!');
+      return postGain;
+    } catch (error) {
+      console.error('[useAudioEffects] Error in setupEffects:', error);
+      throw error;
+    }
   };
 
   const updatePreset = (preset: string) => {
