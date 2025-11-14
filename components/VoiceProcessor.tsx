@@ -89,12 +89,28 @@ export function VoiceProcessor({
       }
       console.log('[VoiceProcessor] getUserMedia is available');
       
-      // Create audio context FIRST (iOS requirement)
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      // Use the global AudioContext created by the Power button (iOS requirement)
+      // This ensures the AudioContext is created and resumed in direct response to user gesture
+      let audioContext = (window as any).__globalAudioContext;
+      
+      if (!audioContext) {
+        console.log('[VoiceProcessor] No global AudioContext found, creating new one...');
+        audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      } else {
+        console.log('[VoiceProcessor] Using global AudioContext');
+      }
+      
       audioContextRef.current = audioContext;
-      console.log('[VoiceProcessor] AudioContext created:', audioContext.state);
+      console.log('[VoiceProcessor] AudioContext state:', audioContext.state);
 
-      // Request microphone access BEFORE resuming context (iOS requirement)
+      // Resume if still suspended (iOS sometimes needs this)
+      if (audioContext.state === 'suspended') {
+        console.log('[VoiceProcessor] AudioContext still suspended, attempting resume...');
+        await audioContext.resume();
+        console.log('[VoiceProcessor] AudioContext after resume attempt:', audioContext.state);
+      }
+
+      // Request microphone access
       console.log('[VoiceProcessor] Requesting microphone access...');
       let stream;
       try {
@@ -118,13 +134,6 @@ export function VoiceProcessor({
       streamRef.current = stream;
       setPermissionGranted(true);
       console.log('[VoiceProcessor] Microphone access granted');
-
-      // Resume audio context AFTER getting the stream (iOS requirement)
-      if (audioContext.state === 'suspended') {
-        console.log('[VoiceProcessor] Resuming AudioContext...');
-        await audioContext.resume();
-        console.log('[VoiceProcessor] AudioContext resumed:', audioContext.state);
-      }
 
       // Wait a bit for iOS to fully initialize (sometimes needed)
       await new Promise(resolve => setTimeout(resolve, 100));

@@ -20,6 +20,28 @@ export default function App() {
     
     setIsStarting(true);
     
+    // CRITICAL iOS FIX: Create and resume AudioContext IMMEDIATELY in response to user gesture
+    // This must happen synchronously before any async operations
+    if (!isActive && !hasStarted) {
+      console.log('[App] Creating AudioContext in response to user gesture...');
+      try {
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        console.log('[App] AudioContext state:', audioContext.state);
+        
+        if (audioContext.state === 'suspended') {
+          console.log('[App] Resuming AudioContext synchronously...');
+          await audioContext.resume();
+          console.log('[App] AudioContext resumed:', audioContext.state);
+        }
+        
+        // Store it globally so VoiceProcessor can use it
+        (window as any).__globalAudioContext = audioContext;
+        console.log('[App] AudioContext stored globally');
+      } catch (err) {
+        console.error('[App] Failed to create/resume AudioContext:', err);
+      }
+    }
+    
     // Small delay to allow UI to update
     await new Promise(resolve => setTimeout(resolve, 100));
     
