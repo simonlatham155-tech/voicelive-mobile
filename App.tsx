@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { VoiceProcessor } from './components/VoiceProcessor';
 import { EffectControls } from './components/EffectControls';
 import { PresetSelector } from './components/PresetSelector';
+import { DebugConsole } from './components/DebugConsole';
 import { Mic, Power } from 'lucide-react';
 
 export default function App() {
@@ -106,6 +107,9 @@ export default function App() {
               detectedPitch={detectedPitch}
               currentPreset={currentPreset}
             />
+
+            {/* Debug Console */}
+            <DebugConsole />
 
             {/* Footer Info */}
             <div className="mt-6 p-4 bg-gradient-to-br from-zinc-800 to-zinc-900 rounded-lg border border-zinc-700 shadow-inner">
