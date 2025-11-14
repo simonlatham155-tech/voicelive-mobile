@@ -83,6 +83,12 @@ export function VoiceProcessor({
       
       console.log('[VoiceProcessor] Starting audio processing...');
       
+      // Check if getUserMedia is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('getUserMedia is not supported in this browser');
+      }
+      console.log('[VoiceProcessor] getUserMedia is available');
+      
       // Create audio context FIRST (iOS requirement)
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       audioContextRef.current = audioContext;
@@ -90,14 +96,24 @@ export function VoiceProcessor({
 
       // Request microphone access BEFORE resuming context (iOS requirement)
       console.log('[VoiceProcessor] Requesting microphone access...');
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: false,
-          noiseSuppression: false,
-          autoGainControl: false,
-          channelCount: 1,
-        },
-      });
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false,
+            channelCount: 1,
+          },
+        });
+        console.log('[VoiceProcessor] getUserMedia succeeded');
+      } catch (micError: any) {
+        console.error('[VoiceProcessor] getUserMedia failed:', micError);
+        console.error('[VoiceProcessor] Error name:', micError.name);
+        console.error('[VoiceProcessor] Error message:', micError.message);
+        console.error('[VoiceProcessor] Error type:', typeof micError);
+        throw micError;
+      }
 
       streamRef.current = stream;
       setPermissionGranted(true);
@@ -140,14 +156,20 @@ export function VoiceProcessor({
       console.log('[VoiceProcessor] Audio processing started successfully!');
     } catch (err: any) {
       console.error('[VoiceProcessor] Audio processing error:', err);
-      console.error('[VoiceProcessor] Error stack:', err.stack);
+      console.error('[VoiceProcessor] Error name:', err?.name);
+      console.error('[VoiceProcessor] Error message:', err?.message);
+      console.error('[VoiceProcessor] Error stack:', err?.stack);
+      console.error('[VoiceProcessor] Error string:', String(err));
+      console.error('[VoiceProcessor] Error JSON:', JSON.stringify(err));
       
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
         setError('Microphone access denied. Please go to Settings > Safari > Microphone and allow access, then refresh the page.');
       } else if (err.name === 'NotFoundError') {
         setError('No microphone found. Please connect your iRig mic and try again.');
+      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+        setError('Microphone is busy or being used by another app. Please close other apps and try again.');
       } else {
-        setError(`Failed to start audio: ${err.message || 'Unknown error'}. Try refreshing the page.`);
+        setError(`Failed to start audio: ${err.message || err.name || 'Unknown error'}. Try refreshing the page.`);
       }
       
       // Auto turn off if failed

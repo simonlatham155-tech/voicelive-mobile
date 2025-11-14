@@ -79,6 +79,11 @@ export default function App() {
                     ⚠️ <strong>IMPORTANT:</strong> You MUST wear headphones or use the iRig's headphone output to prevent feedback!
                   </p>
                 </div>
+                <div className="mt-3 p-2 bg-green-500/10 border border-green-500/30 rounded text-center">
+                  <p className="text-xs text-green-400">
+                    ✅ Debug console loaded - v2.0
+                  </p>
+                </div>
               </div>
             )}
 
@@ -87,6 +92,9 @@ export default function App() {
               currentPreset={currentPreset}
               onPresetChange={setCurrentPreset}
             />
+
+            {/* Debug Console - Always visible */}
+            <DebugConsole />
 
             {/* Main Processor */}
             <VoiceProcessor
@@ -107,9 +115,6 @@ export default function App() {
               detectedPitch={detectedPitch}
               currentPreset={currentPreset}
             />
-
-            {/* Debug Console */}
-            <DebugConsole />
 
             {/* Footer Info */}
             <div className="mt-6 p-4 bg-gradient-to-br from-zinc-800 to-zinc-900 rounded-lg border border-zinc-700 shadow-inner">
