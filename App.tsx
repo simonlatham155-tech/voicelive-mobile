@@ -54,7 +54,8 @@ export default function App() {
             console.log('[App] AudioContext state after error:', audioContext.state);
             
             // Continue anyway - sometimes it works even after timeout
-            if (audioContext.state !== 'running') {
+            const currentState = audioContext.state as string;
+            if (currentState !== 'running') {
               console.log('[App] Trying one more resume attempt...');
               try {
                 await audioContext.resume();
