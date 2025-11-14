@@ -88,13 +88,7 @@ export function VoiceProcessor({
       audioContextRef.current = audioContext;
       console.log('[VoiceProcessor] AudioContext created:', audioContext.state);
 
-      // Resume audio context if suspended (required on iOS)
-      if (audioContext.state === 'suspended') {
-        await audioContext.resume();
-        console.log('[VoiceProcessor] AudioContext resumed');
-      }
-
-      // Request microphone access with more specific constraints for iOS
+      // Request microphone access BEFORE resuming context (iOS requirement)
       console.log('[VoiceProcessor] Requesting microphone access...');
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -108,6 +102,17 @@ export function VoiceProcessor({
       streamRef.current = stream;
       setPermissionGranted(true);
       console.log('[VoiceProcessor] Microphone access granted');
+
+      // Resume audio context AFTER getting the stream (iOS requirement)
+      if (audioContext.state === 'suspended') {
+        console.log('[VoiceProcessor] Resuming AudioContext...');
+        await audioContext.resume();
+        console.log('[VoiceProcessor] AudioContext resumed:', audioContext.state);
+      }
+
+      // Wait a bit for iOS to fully initialize (sometimes needed)
+      await new Promise(resolve => setTimeout(resolve, 100));
+      console.log('[VoiceProcessor] AudioContext final state:', audioContext.state);
 
       // Create nodes
       console.log('[VoiceProcessor] Creating audio nodes...');
