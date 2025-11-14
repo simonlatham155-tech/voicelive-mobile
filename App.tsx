@@ -28,17 +28,36 @@ export default function App() {
         const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
         console.log('[App] AudioContext state:', audioContext.state);
         
+        // iOS Safari workaround: Play a silent buffer to unlock audio
+        console.log('[App] Playing silent buffer to unlock iOS audio...');
+        const buffer = audioContext.createBuffer(1, 1, 22050);
+        const source = audioContext.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioContext.destination);
+        source.start(0);
+        console.log('[App] Silent buffer played');
+        
+        // Now try to resume
         if (audioContext.state === 'suspended') {
           console.log('[App] Resuming AudioContext synchronously...');
-          await audioContext.resume();
-          console.log('[App] AudioContext resumed:', audioContext.state);
+          try {
+            await audioContext.resume();
+            console.log('[App] AudioContext resumed:', audioContext.state);
+          } catch (resumeErr) {
+            console.error('[App] Resume failed, trying alternative method:', resumeErr);
+            // Sometimes iOS needs multiple attempts
+            await new Promise(resolve => setTimeout(resolve, 50));
+            await audioContext.resume();
+            console.log('[App] AudioContext resumed (2nd attempt):', audioContext.state);
+          }
         }
         
         // Store it globally so VoiceProcessor can use it
         (window as any).__globalAudioContext = audioContext;
-        console.log('[App] AudioContext stored globally');
+        console.log('[App] AudioContext stored globally, final state:', audioContext.state);
       } catch (err) {
         console.error('[App] Failed to create/resume AudioContext:', err);
+        console.error('[App] Error details:', JSON.stringify(err));
       }
     }
     
