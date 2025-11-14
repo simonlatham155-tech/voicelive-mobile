@@ -37,27 +37,43 @@ export default function App() {
         source.start(0);
         console.log('[App] Silent buffer played');
         
-        // Now try to resume
+        // Now try to resume with timeout
         if (audioContext.state === 'suspended') {
-          console.log('[App] Resuming AudioContext synchronously...');
+          console.log('[App] Resuming AudioContext with timeout...');
           try {
-            await audioContext.resume();
+            // Race resume() against a timeout
+            await Promise.race([
+              audioContext.resume(),
+              new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Resume timeout')), 2000)
+              )
+            ]);
             console.log('[App] AudioContext resumed:', audioContext.state);
-          } catch (resumeErr) {
-            console.error('[App] Resume failed, trying alternative method:', resumeErr);
-            // Sometimes iOS needs multiple attempts
-            await new Promise(resolve => setTimeout(resolve, 50));
-            await audioContext.resume();
-            console.log('[App] AudioContext resumed (2nd attempt):', audioContext.state);
+          } catch (resumeErr: any) {
+            console.error('[App] Resume failed:', resumeErr?.message || resumeErr);
+            console.log('[App] AudioContext state after error:', audioContext.state);
+            
+            // Continue anyway - sometimes it works even after timeout
+            if (audioContext.state !== 'running') {
+              console.log('[App] Trying one more resume attempt...');
+              try {
+                await audioContext.resume();
+                console.log('[App] Second resume succeeded:', audioContext.state);
+              } catch (e) {
+                console.error('[App] Second resume also failed, continuing anyway');
+              }
+            }
           }
         }
         
         // Store it globally so VoiceProcessor can use it
         (window as any).__globalAudioContext = audioContext;
         console.log('[App] AudioContext stored globally, final state:', audioContext.state);
-      } catch (err) {
-        console.error('[App] Failed to create/resume AudioContext:', err);
-        console.error('[App] Error details:', JSON.stringify(err));
+        console.log('[App] Proceeding to start VoiceProcessor...');
+      } catch (err: any) {
+        console.error('[App] Failed to create AudioContext:', err);
+        console.error('[App] Error message:', err?.message || 'Unknown error');
+        console.error('[App] Error stack:', err?.stack || 'No stack');
       }
     }
     
