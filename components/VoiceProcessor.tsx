@@ -81,6 +81,15 @@ export function VoiceProcessor({
     try {
       setError(null);
       
+      // Create audio context FIRST (iOS requirement)
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      audioContextRef.current = audioContext;
+
+      // Resume audio context if suspended (required on iOS)
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
+
       // Request microphone access with more specific constraints for iOS
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -93,15 +102,6 @@ export function VoiceProcessor({
 
       streamRef.current = stream;
       setPermissionGranted(true);
-
-      // Create audio context with proper iOS handling
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      audioContextRef.current = audioContext;
-
-      // Resume audio context if suspended (required on iOS)
-      if (audioContext.state === 'suspended') {
-        await audioContext.resume();
-      }
 
       // Create nodes
       const source = audioContext.createMediaStreamSource(stream);
@@ -127,6 +127,16 @@ export function VoiceProcessor({
         setError('No microphone found. Please connect your iRig mic and try again.');
       } else {
         setError(`Failed to start audio: ${err.message || 'Unknown error'}. Try refreshing the page.`);
+      }
+      
+      // Auto turn off if failed
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
       }
     }
   };

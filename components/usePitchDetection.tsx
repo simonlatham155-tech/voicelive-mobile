@@ -23,19 +23,25 @@ export function usePitchDetection(
     const sampleRate = analyser.context.sampleRate;
 
     const detectPitch = () => {
-      analyser.getFloatTimeDomainData(buffer);
-      
-      const detectedPitch = autoCorrelate(buffer, sampleRate);
-      
-      if (detectedPitch && detectedPitch > 0) {
-        setPitch(detectedPitch);
-        setNote(frequencyToNote(detectedPitch));
-      } else {
-        setPitch(null);
-        setNote('');
-      }
+      try {
+        analyser.getFloatTimeDomainData(buffer);
+        
+        const detectedPitch = autoCorrelate(buffer, sampleRate);
+        
+        if (detectedPitch && detectedPitch > 0) {
+          setPitch(detectedPitch);
+          setNote(frequencyToNote(detectedPitch));
+        } else {
+          setPitch(null);
+          setNote('');
+        }
 
-      animationFrameRef.current = requestAnimationFrame(detectPitch);
+        animationFrameRef.current = requestAnimationFrame(detectPitch);
+      } catch (error) {
+        console.error('Pitch detection error:', error);
+        // Continue despite error
+        animationFrameRef.current = requestAnimationFrame(detectPitch);
+      }
     };
 
     detectPitch();

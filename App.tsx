@@ -8,16 +8,26 @@ export default function App() {
   const [isActive, setIsActive] = useState(false);
   const [currentPreset, setCurrentPreset] = useState('simon-le-bon');
   const [hasStarted, setHasStarted] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
   const [updateChorusFn, setUpdateChorusFn] = useState<((amount: number) => void) | null>(null);
   const [updateAutotuneFn, setUpdateAutotuneFn] = useState<((amount: number, pitch: number | null) => void) | null>(null);
   const [updateAutotuneKeyFn, setUpdateAutotuneKeyFn] = useState<((key: string) => void) | null>(null);
   const [detectedPitch, setDetectedPitch] = useState<number | null>(null);
 
-  const handlePowerToggle = () => {
+  const handlePowerToggle = async () => {
+    if (isStarting) return; // Prevent double-click
+    
+    setIsStarting(true);
+    
+    // Small delay to allow UI to update
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     setIsActive(!isActive);
     if (!hasStarted) {
       setHasStarted(true);
     }
+    
+    setIsStarting(false);
   };
 
   return (
