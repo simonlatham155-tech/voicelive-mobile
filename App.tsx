@@ -37,40 +37,25 @@ export default function App() {
         source.start(0);
         console.log('[App] Silent buffer played');
         
-        // Now try to resume with timeout
+        // Try to resume, but don't wait for it - iOS Safari is buggy
         if (audioContext.state === 'suspended') {
-          console.log('[App] Resuming AudioContext with timeout...');
-          try {
-            // Race resume() against a timeout
-            await Promise.race([
-              audioContext.resume(),
-              new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Resume timeout')), 2000)
-              )
-            ]);
-            console.log('[App] AudioContext resumed:', audioContext.state);
-          } catch (resumeErr: any) {
-            console.error('[App] Resume failed:', resumeErr?.message || resumeErr);
-            console.log('[App] AudioContext state after error:', audioContext.state);
-            
-            // Continue anyway - sometimes it works even after timeout
-            const currentState = audioContext.state as string;
-            if (currentState !== 'running') {
-              console.log('[App] Trying one more resume attempt...');
-              try {
-                await audioContext.resume();
-                console.log('[App] Second resume succeeded:', audioContext.state);
-              } catch (e) {
-                console.error('[App] Second resume also failed, continuing anyway');
-              }
-            }
-          }
+          console.log('[App] Attempting to resume AudioContext (non-blocking)...');
+          // Fire and forget - don't await
+          audioContext.resume().then(() => {
+            console.log('[App] AudioContext resumed successfully:', audioContext.state);
+          }).catch((err) => {
+            console.error('[App] Resume failed (non-critical):', err?.message || err);
+          });
+          
+          // Give it a tiny moment, then move on regardless
+          await new Promise(resolve => setTimeout(resolve, 100));
+          console.log('[App] Proceeding anyway, AudioContext state:', audioContext.state);
         }
         
         // Store it globally so VoiceProcessor can use it
         (window as any).__globalAudioContext = audioContext;
-        console.log('[App] AudioContext stored globally, final state:', audioContext.state);
-        console.log('[App] Proceeding to start VoiceProcessor...');
+        console.log('[App] AudioContext stored globally for VoiceProcessor');
+        console.log('[App] VoiceProcessor will attempt to resume when connecting microphone...');
       } catch (err: any) {
         console.error('[App] Failed to create AudioContext:', err);
         console.error('[App] Error message:', err?.message || 'Unknown error');

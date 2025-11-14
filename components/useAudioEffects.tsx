@@ -55,6 +55,7 @@ export function useAudioEffects() {
       const compressor = audioContext.createDynamicsCompressor();
       console.log('[useAudioEffects] Creating autotune engine...');
       const autotune = new AutotuneEngine(audioContext, source);
+      console.log('[useAudioEffects] Autotune engine created successfully');
       const pitchShifter = audioContext.createBiquadFilter();
       const harmony = audioContext.createGain();
       const reverb = audioContext.createConvolver();

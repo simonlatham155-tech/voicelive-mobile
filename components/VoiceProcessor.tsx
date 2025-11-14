@@ -103,14 +103,7 @@ export function VoiceProcessor({
       audioContextRef.current = audioContext;
       console.log('[VoiceProcessor] AudioContext state:', audioContext.state);
 
-      // Resume if still suspended (iOS sometimes needs this)
-      if (audioContext.state === 'suspended') {
-        console.log('[VoiceProcessor] AudioContext still suspended, attempting resume...');
-        await audioContext.resume();
-        console.log('[VoiceProcessor] AudioContext after resume attempt:', audioContext.state);
-      }
-
-      // Request microphone access
+      // Request microphone access FIRST (this is another user gesture)
       console.log('[VoiceProcessor] Requesting microphone access...');
       let stream;
       try {
@@ -135,8 +128,18 @@ export function VoiceProcessor({
       setPermissionGranted(true);
       console.log('[VoiceProcessor] Microphone access granted');
 
-      // Wait a bit for iOS to fully initialize (sometimes needed)
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // NOW try to resume AudioContext after we have mic permission (another user gesture context)
+      if (audioContext.state === 'suspended') {
+        console.log('[VoiceProcessor] Resuming AudioContext after mic grant...');
+        try {
+          await audioContext.resume();
+          console.log('[VoiceProcessor] AudioContext resumed:', audioContext.state);
+        } catch (resumeErr: any) {
+          console.error('[VoiceProcessor] Resume after mic failed:', resumeErr?.message || resumeErr);
+          console.log('[VoiceProcessor] Continuing anyway, state:', audioContext.state);
+        }
+      }
+
       console.log('[VoiceProcessor] AudioContext final state:', audioContext.state);
 
       // Create nodes
@@ -153,11 +156,13 @@ export function VoiceProcessor({
       const effectsOutput = setupEffects(audioContext, source, analyser);
       console.log('[VoiceProcessor] Effects chain setup complete');
 
+      // TEMPORARY: Don't connect to destination to debug iOS crash
       // Connect to destination - user MUST wear headphones to prevent feedback
       // This is required for the vocal processor to work
-      effectsOutput.connect(audioContext.destination);
+      console.log('[VoiceProcessor] NOT connecting to output (testing iOS crash fix)');
+      // effectsOutput.connect(audioContext.destination);
       
-      console.log('[VoiceProcessor] Connected to output - IMPORTANT: Use headphones to prevent feedback!');
+      console.log('[VoiceProcessor] Audio nodes connected - monitoring only mode');
 
       // Start level monitoring
       console.log('[VoiceProcessor] Starting level monitoring...');
