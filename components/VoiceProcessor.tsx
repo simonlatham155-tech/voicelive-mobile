@@ -166,8 +166,6 @@ export function VoiceProcessor({
       // Connect to destination - user MUST wear headphones to prevent feedback
       // This is required for the vocal processor to work
       console.log('[VoiceProcessor] NOT connecting to output (testing iOS crash fix)');
-      // const effectsOutput = setupEffects(audioContext, source, analyser);
-      // effectsOutput.connect(audioContext.destination);
       
       console.log('[VoiceProcessor] Audio nodes connected - monitoring only mode');
 
