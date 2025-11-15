@@ -124,7 +124,7 @@ export default function App() {
                 </div>
                 <div className="mt-3 p-2 bg-green-500/10 border border-green-500/30 rounded text-center">
                   <p className="text-xs text-green-400">
-                    ✅ Debug console loaded - v2.01
+                    ✅ Debug console loaded - v2.02
                   </p>
                 </div>
               </div>
