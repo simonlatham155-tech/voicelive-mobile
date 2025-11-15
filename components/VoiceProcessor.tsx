@@ -144,15 +144,21 @@ export function VoiceProcessor({
 
       // Create nodes
       console.log('[VoiceProcessor] Creating audio nodes...');
+      await new Promise(resolve => setTimeout(resolve, 500)); // DELAY to see logs
       const source = audioContext.createMediaStreamSource(stream);
+      console.log('[VoiceProcessor] MediaStreamSource created');
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       const analyser = audioContext.createAnalyser();
       analyser.fftSize = 2048;
       analyser.smoothingTimeConstant = 0.8;
       analyserRef.current = analyser;
-      console.log('[VoiceProcessor] Audio nodes created');
+      console.log('[VoiceProcessor] Analyser created');
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       // Setup effects chain
       console.log('[VoiceProcessor] Setting up effects chain...');
+      await new Promise(resolve => setTimeout(resolve, 500));
       setupEffects(audioContext, source, analyser);
       console.log('[VoiceProcessor] Effects chain setup complete');
 
